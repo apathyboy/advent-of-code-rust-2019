@@ -1,26 +1,21 @@
+use std::iter::successors;
+
 advent_of_code::solution!(1);
 
 fn calculate_required_fuel(mass: usize) -> usize {
-    let fuel = (mass as isize / 3) - 2;
-
-    if fuel > 0 {
-        fuel as usize
-    } else {
-        0
-    }
+    ((mass / 3).saturating_sub(2)).max(0)
 }
 
 fn calculate_module_fuel(module_mass: usize) -> usize {
-    let mut total_fuel = 0;
-
-    let mut prev_fuel = calculate_required_fuel(module_mass);
-
-    while prev_fuel > 0 {
-        total_fuel += prev_fuel;
-        prev_fuel = calculate_required_fuel(prev_fuel);
-    }
-
-    total_fuel
+    successors(Some(calculate_required_fuel(module_mass)), |&mass| {
+        let fuel = calculate_required_fuel(mass);
+        if fuel == 0 {
+            None
+        } else {
+            Some(fuel)
+        }
+    })
+    .sum()
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
