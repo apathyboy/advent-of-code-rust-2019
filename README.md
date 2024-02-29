@@ -8,3 +8,4 @@ Solutions for [Advent of Code](https://adventofcode.com/) in [Rust](https://www.
 
 <!--- benchmarking table --->
 
+*Benchmarks performed on a 2021 M1 Macbook Pro, 16GB*
