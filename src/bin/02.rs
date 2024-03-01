@@ -1,37 +1,34 @@
 use advent_of_code::{parse_intcode_program, IntcodeComputer, IntcodeProgram};
 advent_of_code::solution!(2);
 
-fn run_program(program: IntcodeProgram) -> IntcodeProgram {
-    let mut computer = IntcodeComputer::new();
-
-    computer.load_program(program);
-    computer.run();
-
-    computer.read_program()
-}
+const TARGET_OUTPUT: isize = 19690720;
 
 pub fn part_one(input: &str) -> Option<isize> {
-    let mut program = parse_intcode_program(input)?;
+    let mut program: IntcodeProgram = parse_intcode_program(input)?;
+    let mut computer = IntcodeComputer::default();
 
     program[1] = 12;
     program[2] = 2;
 
-    program = run_program(program);
+    computer.load_program(&program);
+    computer.run();
 
-    Some(program[0])
+    computer.register(0)
 }
 
 pub fn part_two(input: &str) -> Option<isize> {
-    let mut program = parse_intcode_program(input)?;
+    let mut program: IntcodeProgram = parse_intcode_program(input)?;
+    let mut computer = IntcodeComputer::default();
 
     for noun in 0..=99 {
         for verb in 0..=99 {
             program[1] = noun;
             program[2] = verb;
 
-            let output = run_program(program.clone());
+            computer.load_program(&program);
+            computer.run();
 
-            if output[0] == 19690720 {
+            if computer.register(0)? == TARGET_OUTPUT {
                 return Some(100 * noun + verb);
             }
         }
@@ -52,7 +49,12 @@ mod tests {
     #[case(IntcodeProgram::from([2,4,4,5,99,0]), IntcodeProgram::from([2,4,4,5,99,9801]))]
     #[case(IntcodeProgram::from([1,1,1,4,99,5,6,0,99]), IntcodeProgram::from([30,1,1,4,2,5,6,0,99]))]
     fn test_run_program(#[case] input: IntcodeProgram, #[case] expected: IntcodeProgram) {
-        let result = run_program(input);
+        let mut computer = IntcodeComputer::new();
+
+        computer.load_program(&input);
+        computer.run();
+
+        let result = computer.memory_snapshot();
         assert_eq!(result, expected);
     }
 }

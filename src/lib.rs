@@ -9,6 +9,12 @@ pub struct IntcodeComputer {
     program: IntcodeProgram,
 }
 
+impl Default for IntcodeComputer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IntcodeComputer {
     pub fn new() -> Self {
         Self {
@@ -21,10 +27,22 @@ impl IntcodeComputer {
         self.instruction_pointer = 0;
     }
 
-    pub fn load_program(&mut self, program: IntcodeProgram) {
-        self.program = program;
+    pub fn load_program(&mut self, program: &IntcodeProgram) {
+        self.program = program.clone();
 
         self.reset();
+    }
+
+    pub fn memory_snapshot(&self) -> Vec<isize> {
+        self.program.clone()
+    }
+
+    pub fn register(&self, register: usize) -> Option<isize> {
+        if register < self.program.len() {
+            Some(self.program[register])
+        } else {
+            None
+        }
     }
 
     pub fn read_program(&self) -> IntcodeProgram {
