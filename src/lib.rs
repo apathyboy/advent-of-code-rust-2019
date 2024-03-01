@@ -2,7 +2,7 @@ pub mod template;
 
 // Use this file to add helper functions and additional modules.
 
-pub type IntcodeProgram = Vec<isize>;
+pub type IntcodeProgram = Vec<i64>;
 
 pub struct IntcodeComputer {
     instruction_pointer: usize,
@@ -33,11 +33,11 @@ impl IntcodeComputer {
         self.reset();
     }
 
-    pub fn memory_snapshot(&self) -> Vec<isize> {
-        self.program.clone()
+    pub fn memory_snapshot(&self) -> &[i64] {
+        &self.program
     }
 
-    pub fn register(&self, register: usize) -> Option<isize> {
+    pub fn register(&self, register: usize) -> Option<i64> {
         if register < self.program.len() {
             Some(self.program[register])
         } else {

@@ -1,20 +1,20 @@
 use advent_of_code::{parse_intcode_program, IntcodeComputer, IntcodeProgram};
 advent_of_code::solution!(2);
 
-const TARGET_OUTPUT: isize = 19690720;
+const TARGET_OUTPUT: i64 = 19690720;
 
 const NOUN_POSITION: usize = 1;
-const NOUN_MAX: isize = 99;
-const DEFAULT_NOUN: isize = 12;
+const NOUN_MAX: i64 = 99;
+const DEFAULT_NOUN: i64 = 12;
 
 const VERB_POSITION: usize = 2;
-const VERB_MAX: isize = 99;
-const VERB_DEFAULT: isize = 2;
+const VERB_MAX: i64 = 99;
+const VERB_DEFAULT: i64 = 2;
 
 const OUTPUT_REGISTER: usize = 0;
-const OUTPUT_FACTOR: isize = 100;
+const OUTPUT_FACTOR: i64 = 100;
 
-pub fn part_one(input: &str) -> Option<isize> {
+pub fn part_one(input: &str) -> Option<i64> {
     let mut program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
@@ -27,7 +27,7 @@ pub fn part_one(input: &str) -> Option<isize> {
     computer.register(OUTPUT_REGISTER)
 }
 
-pub fn part_two(input: &str) -> Option<isize> {
+pub fn part_two(input: &str) -> Option<i64> {
     let mut program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
