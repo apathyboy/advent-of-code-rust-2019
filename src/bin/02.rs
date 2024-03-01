@@ -3,33 +3,44 @@ advent_of_code::solution!(2);
 
 const TARGET_OUTPUT: isize = 19690720;
 
+const NOUN_POSITION: usize = 1;
+const NOUN_MAX: isize = 99;
+const DEFAULT_NOUN: isize = 12;
+
+const VERB_POSITION: usize = 2;
+const VERB_MAX: isize = 99;
+const VERB_DEFAULT: isize = 2;
+
+const OUTPUT_REGISTER: usize = 0;
+const OUTPUT_FACTOR: isize = 100;
+
 pub fn part_one(input: &str) -> Option<isize> {
     let mut program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
-    program[1] = 12;
-    program[2] = 2;
+    program[NOUN_POSITION] = DEFAULT_NOUN;
+    program[VERB_POSITION] = VERB_DEFAULT;
 
     computer.load_program(&program);
     computer.run();
 
-    computer.register(0)
+    computer.register(OUTPUT_REGISTER)
 }
 
 pub fn part_two(input: &str) -> Option<isize> {
     let mut program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
-    for noun in 0..=99 {
-        for verb in 0..=99 {
-            program[1] = noun;
-            program[2] = verb;
+    for noun in 0..=NOUN_MAX {
+        for verb in 0..=VERB_MAX {
+            program[NOUN_POSITION] = noun;
+            program[VERB_POSITION] = verb;
 
             computer.load_program(&program);
             computer.run();
 
-            if computer.register(0)? == TARGET_OUTPUT {
-                return Some(100 * noun + verb);
+            if computer.register(OUTPUT_REGISTER)? == TARGET_OUTPUT {
+                return Some(OUTPUT_FACTOR * noun + verb);
             }
         }
     }
