@@ -29,3 +29,4 @@ tinyjson = "2.5.1"
 
 # Solution dependencies
 rstest = "0.18.2"
+glam = "0.25.0"
