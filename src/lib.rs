@@ -9,7 +9,7 @@ pub enum ParameterMode {
 
 pub type IntcodeProgram = Vec<i64>;
 pub type InputSource = Box<dyn Fn() -> i64>;
-pub type OutputSink = Box<dyn Fn(i64)>;
+pub type OutputSink = Box<dyn FnMut(i64)>;
 
 pub struct IntcodeComputer {
     instruction_pointer: usize,
@@ -84,34 +84,49 @@ impl IntcodeComputer {
         }
     }
 
-    fn parameter_mode(_opcode: i64, _parameter: i8) -> ParameterMode {
-        todo!()
+    fn parameter_mode(&self, opcode: i64, parameter: i8) -> ParameterMode {
+        let mode = opcode / 10i64.pow(parameter as u32 + 1) % 10;
+
+        match mode {
+            0 => ParameterMode::Position,
+            1 => ParameterMode::Immediate,
+            _ => panic!("Invalid parameter mode"),
+        }
     }
 
     fn opcode(&self, opcode: i64) -> i8 {
-        todo!()
+        (opcode % 100) as i8
     }
 
-    fn op_add(&mut self, _opcode: i64) {
-        let input_a = self.program[self.instruction_pointer + 1];
-        let input_b = self.program[self.instruction_pointer + 2];
+    fn read_parameter(&self, parameter: i8, opcode: i64) -> i64 {
+        let mode = self.parameter_mode(opcode, parameter);
+
+        match mode {
+            ParameterMode::Position => {
+                self.program[self.program[self.instruction_pointer + parameter as usize] as usize]
+            }
+            ParameterMode::Immediate => self.program[self.instruction_pointer + parameter as usize],
+        }
+    }
+
+    fn op_add(&mut self, opcode: i64) {
+        let input_a = self.read_parameter(1, opcode);
+        let input_b = self.read_parameter(2, opcode);
         let output_c = self.program[self.instruction_pointer + 3];
 
         self.instruction_pointer += 4;
 
-        self.program[output_c as usize] =
-            self.program[input_a as usize] + self.program[input_b as usize];
+        self.program[output_c as usize] = input_a + input_b;
     }
 
-    fn op_mul(&mut self, _opcode: i64) {
-        let input_a = self.program[self.instruction_pointer + 1];
-        let input_b = self.program[self.instruction_pointer + 2];
+    fn op_mul(&mut self, opcode: i64) {
+        let input_a = self.read_parameter(1, opcode);
+        let input_b = self.read_parameter(2, opcode);
         let output_c = self.program[self.instruction_pointer + 3];
 
         self.instruction_pointer += 4;
 
-        self.program[output_c as usize] =
-            self.program[input_a as usize] * self.program[input_b as usize];
+        self.program[output_c as usize] = input_a * input_b;
     }
 
     fn op_out(&mut self, _opcode: i64) {
@@ -124,8 +139,8 @@ impl IntcodeComputer {
         }
     }
 
-    fn op_in(&mut self, _opcode: i64) {
-        let output = self.program[self.instruction_pointer + 1];
+    fn op_in(&mut self, opcode: i64) {
+        let output = self.read_parameter(1, opcode);
 
         self.instruction_pointer += 2;
 
