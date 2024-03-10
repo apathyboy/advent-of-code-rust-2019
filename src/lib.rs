@@ -2,11 +2,21 @@ pub mod template;
 
 // Use this file to add helper functions and additional modules.
 
+pub enum ParameterMode {
+    Position,
+    Immediate,
+}
+
 pub type IntcodeProgram = Vec<i64>;
+pub type InputSource = Box<dyn Fn() -> i64>;
+pub type OutputSink = Box<dyn Fn(i64)>;
 
 pub struct IntcodeComputer {
     instruction_pointer: usize,
     program: IntcodeProgram,
+    input: Option<InputSource>,
+    output: Option<OutputSink>,
+    is_running: bool,
 }
 
 impl Default for IntcodeComputer {
@@ -20,7 +30,18 @@ impl IntcodeComputer {
         Self {
             instruction_pointer: 0,
             program: IntcodeProgram::new(),
+            input: None,
+            output: None,
+            is_running: false,
         }
+    }
+
+    pub fn init_input_source(&mut self, input_source: InputSource) {
+        self.input = Some(input_source);
+    }
+
+    pub fn init_output_sink(&mut self, output_sink: OutputSink) {
+        self.output = Some(output_sink);
     }
 
     pub fn reset(&mut self) {
@@ -49,35 +70,94 @@ impl IntcodeComputer {
         self.program.clone()
     }
 
+    fn get_next_input(&mut self) -> Option<i64> {
+        if let Some(input_source) = self.input.as_mut() {
+            Some(input_source())
+        } else {
+            None
+        }
+    }
+
+    fn set_output(&mut self, output: i64) {
+        if let Some(output_sink) = self.output.as_mut() {
+            output_sink(output);
+        }
+    }
+
+    fn parameter_mode(_opcode: i64, _parameter: i8) -> ParameterMode {
+        todo!()
+    }
+
+    fn opcode(&self, opcode: i64) -> i8 {
+        todo!()
+    }
+
+    fn op_add(&mut self, _opcode: i64) {
+        let input_a = self.program[self.instruction_pointer + 1];
+        let input_b = self.program[self.instruction_pointer + 2];
+        let output_c = self.program[self.instruction_pointer + 3];
+
+        self.instruction_pointer += 4;
+
+        self.program[output_c as usize] =
+            self.program[input_a as usize] + self.program[input_b as usize];
+    }
+
+    fn op_mul(&mut self, _opcode: i64) {
+        let input_a = self.program[self.instruction_pointer + 1];
+        let input_b = self.program[self.instruction_pointer + 2];
+        let output_c = self.program[self.instruction_pointer + 3];
+
+        self.instruction_pointer += 4;
+
+        self.program[output_c as usize] =
+            self.program[input_a as usize] * self.program[input_b as usize];
+    }
+
+    fn op_out(&mut self, _opcode: i64) {
+        let output = self.program[self.instruction_pointer + 1];
+
+        self.instruction_pointer += 2;
+
+        if let Some(input) = self.get_next_input() {
+            self.program[output as usize] = input;
+        }
+    }
+
+    fn op_in(&mut self, _opcode: i64) {
+        let output = self.program[self.instruction_pointer + 1];
+
+        self.instruction_pointer += 2;
+
+        self.set_output(output);
+    }
+
+    fn op_exit(&mut self, _opcode: i64) {
+        self.instruction_pointer += 1;
+        self.is_running = false;
+    }
+
     pub fn run(&mut self) {
-        loop {
+        self.is_running = true;
+
+        while self.is_running {
             let opcode = self.program[self.instruction_pointer];
 
-            match opcode {
+            match self.opcode(opcode) {
                 1 => {
-                    let input_a = self.program[self.instruction_pointer + 1];
-                    let input_b = self.program[self.instruction_pointer + 2];
-                    let output_c = self.program[self.instruction_pointer + 3];
-
-                    self.program[output_c as usize] =
-                        self.program[input_a as usize] + self.program[input_b as usize];
-
-                    self.instruction_pointer += 4;
+                    self.op_add(opcode);
                 }
                 2 => {
-                    let input_a = self.program[self.instruction_pointer + 1];
-                    let input_b = self.program[self.instruction_pointer + 2];
-                    let output_c = self.program[self.instruction_pointer + 3];
-
-                    self.program[output_c as usize] =
-                        self.program[input_a as usize] * self.program[input_b as usize];
-
-                    self.instruction_pointer += 4;
+                    self.op_mul(opcode);
+                }
+                3 => {
+                    self.op_out(opcode);
+                }
+                4 => {
+                    self.op_in(opcode);
                 }
                 99 => {
-                    self.instruction_pointer += 1;
-
-                    break;
+                    self.op_exit(opcode);
                 }
                 _ => panic!("Invalid opcode"),
             }
