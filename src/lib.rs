@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 pub mod template;
 
 // Use this file to add helper functions and additional modules.
@@ -14,7 +16,7 @@ pub type OutputSink = Box<dyn FnMut(i64)>;
 pub struct IntcodeComputer {
     instruction_pointer: usize,
     program: IntcodeProgram,
-    input: Option<InputSource>,
+    input: VecDeque<i64>,
     output: Vec<i64>,
     is_running: bool,
 }
@@ -30,14 +32,10 @@ impl IntcodeComputer {
         Self {
             instruction_pointer: 0,
             program: IntcodeProgram::new(),
-            input: None,
+            input: VecDeque::new(),
             output: Vec::new(),
             is_running: false,
         }
-    }
-
-    pub fn init_input_source(&mut self, input_source: InputSource) {
-        self.input = Some(input_source);
     }
 
     pub fn reset(&mut self) {
@@ -66,12 +64,12 @@ impl IntcodeComputer {
         self.program.clone()
     }
 
-    fn get_next_input(&mut self) -> Option<i64> {
-        if let Some(input_source) = self.input.as_mut() {
-            Some(input_source())
-        } else {
-            None
-        }
+    pub fn set_input(&mut self, val: i64) {
+        self.input.push_back(val);
+    }
+
+    fn get_input(&mut self) -> Option<i64> {
+        self.input.pop_front()
     }
 
     fn set_output(&mut self, val: i64) {
@@ -189,7 +187,7 @@ impl IntcodeComputer {
         }
         self.instruction_pointer += 2;
 
-        if let Some(input) = self.get_next_input() {
+        if let Some(input) = self.get_input() {
             self.program[output as usize] = input;
         }
     }
