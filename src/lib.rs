@@ -35,13 +35,18 @@ impl IntcodeComputer {
             program: IntcodeProgram::new(),
             input: VecDeque::new(),
             output: Vec::new(),
-            is_running: false,
+            is_running: true,
             ticks: 0,
         }
     }
 
+    pub fn is_running(&self) -> bool {
+        self.is_running
+    }
+
     pub fn reset(&mut self) {
         self.instruction_pointer = 0;
+        self.is_running = true;
     }
 
     pub fn load_program(&mut self, program: &IntcodeProgram) {
@@ -80,6 +85,10 @@ impl IntcodeComputer {
 
     pub fn get_output(&self) -> &[i64] {
         &self.output
+    }
+
+    pub fn get_next_output(&mut self) -> Option<i64> {
+        self.output.pop()
     }
 
     fn parameter_mode(&self, instruction: i64, parameter: i8) -> ParameterMode {
@@ -130,8 +139,6 @@ impl IntcodeComputer {
     }
 
     pub fn run(&mut self) {
-        self.is_running = true;
-
         while self.is_running {
             self.tick();
         }
