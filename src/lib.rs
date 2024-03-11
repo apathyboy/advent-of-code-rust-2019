@@ -85,7 +85,7 @@ impl IntcodeComputer {
     }
 
     fn parameter_mode(&self, opcode: i64, parameter: i8) -> ParameterMode {
-        let mode = opcode / 10i64.pow(parameter as u32 + 1) % 10;
+        let mode = opcode as usize / (10_usize.pow(parameter as u32 + 1)) % 10;
 
         match mode {
             0 => ParameterMode::Position,
@@ -99,13 +99,12 @@ impl IntcodeComputer {
     }
 
     fn read_parameter(&self, parameter: i8, opcode: i64) -> i64 {
+        let index = (self.instruction_pointer + parameter as usize) % self.program.len();
         let mode = self.parameter_mode(opcode, parameter);
 
         match mode {
-            ParameterMode::Position => {
-                self.program[self.program[self.instruction_pointer + parameter as usize] as usize]
-            }
-            ParameterMode::Immediate => self.program[self.instruction_pointer + parameter as usize],
+            ParameterMode::Position => self.program[self.program[index] as usize],
+            ParameterMode::Immediate => self.program[index],
         }
     }
 
@@ -113,6 +112,10 @@ impl IntcodeComputer {
         let input_a = self.read_parameter(1, opcode);
         let input_b = self.read_parameter(2, opcode);
         let output_c = self.program[self.instruction_pointer + 3];
+
+        if output_c == 677 {
+            panic!("add set to 677");
+        }
 
         self.instruction_pointer += 4;
 
@@ -124,14 +127,68 @@ impl IntcodeComputer {
         let input_b = self.read_parameter(2, opcode);
         let output_c = self.program[self.instruction_pointer + 3];
 
+        if output_c == 677 {
+            panic!("add set to 677");
+        }
         self.instruction_pointer += 4;
 
         self.program[output_c as usize] = input_a * input_b;
     }
 
-    fn op_out(&mut self, _opcode: i64) {
+    fn op_jump_if_true(&mut self, opcode: i64) {
+        let input_a = self.read_parameter(1, opcode);
+        let input_b = self.read_parameter(2, opcode);
+
+        if input_a != 0 {
+            self.instruction_pointer = input_b as usize;
+        } else {
+            self.instruction_pointer += 3;
+        }
+    }
+
+    fn op_jump_if_false(&mut self, opcode: i64) {
+        let input_a = self.read_parameter(1, opcode);
+        let input_b = self.read_parameter(2, opcode);
+
+        if input_a == 0 {
+            self.instruction_pointer = input_b as usize;
+        } else {
+            self.instruction_pointer += 3;
+        }
+    }
+
+    fn op_lt(&mut self, opcode: i64) {
+        let input_a = self.read_parameter(1, opcode);
+        let input_b = self.read_parameter(2, opcode);
+        let output_c = self.program[self.instruction_pointer + 3];
+
+        if output_c == 677 {
+            panic!("add set to 677");
+        }
+        self.instruction_pointer += 4;
+
+        self.program[output_c as usize] = if input_a < input_b { 1 } else { 0 };
+    }
+
+    fn op_eq(&mut self, opcode: i64) {
+        let input_a = self.read_parameter(1, opcode);
+        let input_b = self.read_parameter(2, opcode);
+        let output_c = self.program[self.instruction_pointer + 3];
+
+        if output_c == 677 {
+            panic!("add set to 677");
+        }
+        self.instruction_pointer += 4;
+
+        self.program[output_c as usize] = if input_a == input_b { 1 } else { 0 };
+    }
+
+    fn op_in(&mut self, _opcode: i64) {
         let output = self.program[self.instruction_pointer + 1];
 
+        if output == 677 {
+            panic!("add set to 677");
+        }
         self.instruction_pointer += 2;
 
         if let Some(input) = self.get_next_input() {
@@ -139,7 +196,7 @@ impl IntcodeComputer {
         }
     }
 
-    fn op_in(&mut self, opcode: i64) {
+    fn op_out(&mut self, opcode: i64) {
         let output = self.read_parameter(1, opcode);
 
         self.instruction_pointer += 2;
@@ -158,7 +215,9 @@ impl IntcodeComputer {
         while self.is_running {
             let opcode = self.program[self.instruction_pointer];
 
-            match self.opcode(opcode) {
+            let op = self.opcode(opcode);
+
+            match op {
                 1 => {
                     self.op_add(opcode);
                 }
@@ -166,10 +225,22 @@ impl IntcodeComputer {
                     self.op_mul(opcode);
                 }
                 3 => {
-                    self.op_out(opcode);
+                    self.op_in(opcode);
                 }
                 4 => {
-                    self.op_in(opcode);
+                    self.op_out(opcode);
+                }
+                5 => {
+                    self.op_jump_if_true(opcode);
+                }
+                6 => {
+                    self.op_jump_if_false(opcode);
+                }
+                7 => {
+                    self.op_lt(opcode);
+                }
+                8 => {
+                    self.op_eq(opcode);
                 }
                 99 => {
                     self.op_exit(opcode);
@@ -181,5 +252,10 @@ impl IntcodeComputer {
 }
 
 pub fn parse_intcode_program(input: &str) -> Option<IntcodeProgram> {
-    Some(input.split(',').filter_map(|n| n.parse().ok()).collect())
+    Some(
+        input
+            .split(',')
+            .filter_map(|n| n.trim().parse().ok())
+            .collect(),
+    )
 }
