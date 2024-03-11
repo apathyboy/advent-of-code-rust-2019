@@ -15,7 +15,7 @@ pub struct IntcodeComputer {
     instruction_pointer: usize,
     program: IntcodeProgram,
     input: Option<InputSource>,
-    output: Option<OutputSink>,
+    output: Vec<i64>,
     is_running: bool,
 }
 
@@ -31,17 +31,13 @@ impl IntcodeComputer {
             instruction_pointer: 0,
             program: IntcodeProgram::new(),
             input: None,
-            output: None,
+            output: Vec::new(),
             is_running: false,
         }
     }
 
     pub fn init_input_source(&mut self, input_source: InputSource) {
         self.input = Some(input_source);
-    }
-
-    pub fn init_output_sink(&mut self, output_sink: OutputSink) {
-        self.output = Some(output_sink);
     }
 
     pub fn reset(&mut self) {
@@ -78,10 +74,12 @@ impl IntcodeComputer {
         }
     }
 
-    fn set_output(&mut self, output: i64) {
-        if let Some(output_sink) = self.output.as_mut() {
-            output_sink(output);
-        }
+    fn set_output(&mut self, val: i64) {
+        self.output.push(val);
+    }
+
+    pub fn get_output(&self) -> &[i64] {
+        &self.output
     }
 
     fn parameter_mode(&self, opcode: i64, parameter: i8) -> ParameterMode {
