@@ -19,6 +19,7 @@ pub struct IntcodeComputer {
     input: VecDeque<i64>,
     output: Vec<i64>,
     is_running: bool,
+    ticks: usize,
 }
 
 impl Default for IntcodeComputer {
@@ -35,6 +36,7 @@ impl IntcodeComputer {
             input: VecDeque::new(),
             output: Vec::new(),
             is_running: false,
+            ticks: 0,
         }
     }
 
@@ -80,8 +82,8 @@ impl IntcodeComputer {
         &self.output
     }
 
-    fn parameter_mode(&self, opcode: i64, parameter: i8) -> ParameterMode {
-        let mode = opcode as usize / (10_usize.pow(parameter as u32 + 1)) % 10;
+    fn parameter_mode(&self, instruction: i64, parameter: i8) -> ParameterMode {
+        let mode = instruction as usize / (10_usize.pow(parameter as u32 + 1)) % 10;
 
         match mode {
             0 => ParameterMode::Position,
@@ -90,13 +92,13 @@ impl IntcodeComputer {
         }
     }
 
-    fn opcode(&self, opcode: i64) -> i8 {
-        (opcode % 100) as i8
+    fn opcode(&self, instruction: i64) -> i8 {
+        (instruction % 100) as i8
     }
 
-    fn read_parameter(&self, parameter: i8, opcode: i64) -> i64 {
+    fn read_parameter(&self, parameter: i8, instruction: i64) -> i64 {
         let index = (self.instruction_pointer + parameter as usize) % self.program.len();
-        let mode = self.parameter_mode(opcode, parameter);
+        let mode = self.parameter_mode(instruction, parameter);
 
         match mode {
             ParameterMode::Position => self.program[self.program[index] as usize],
@@ -104,146 +106,124 @@ impl IntcodeComputer {
         }
     }
 
-    fn op_add(&mut self, opcode: i64) {
-        let input_a = self.read_parameter(1, opcode);
-        let input_b = self.read_parameter(2, opcode);
-        let output_c = self.program[self.instruction_pointer + 3];
+    pub fn tick(&mut self) {
+        self.ticks += 1;
 
-        if output_c == 677 {
-            panic!("add set to 677");
-        }
+        let instruction = self.program[self.instruction_pointer];
 
-        self.instruction_pointer += 4;
+        let op = self.opcode(instruction);
 
-        self.program[output_c as usize] = input_a + input_b;
-    }
+        let steps = match op {
+            1 => self.op_add(instruction),
+            2 => self.op_mul(instruction),
+            3 => self.op_in(instruction),
+            4 => self.op_out(instruction),
+            5 => self.op_jump_if_true(instruction),
+            6 => self.op_jump_if_false(instruction),
+            7 => self.op_lt(instruction),
+            8 => self.op_eq(instruction),
+            99 => self.op_exit(instruction),
+            _ => panic!("Invalid instruction: {instruction}"),
+        };
 
-    fn op_mul(&mut self, opcode: i64) {
-        let input_a = self.read_parameter(1, opcode);
-        let input_b = self.read_parameter(2, opcode);
-        let output_c = self.program[self.instruction_pointer + 3];
-
-        if output_c == 677 {
-            panic!("add set to 677");
-        }
-        self.instruction_pointer += 4;
-
-        self.program[output_c as usize] = input_a * input_b;
-    }
-
-    fn op_jump_if_true(&mut self, opcode: i64) {
-        let input_a = self.read_parameter(1, opcode);
-        let input_b = self.read_parameter(2, opcode);
-
-        if input_a != 0 {
-            self.instruction_pointer = input_b as usize;
-        } else {
-            self.instruction_pointer += 3;
-        }
-    }
-
-    fn op_jump_if_false(&mut self, opcode: i64) {
-        let input_a = self.read_parameter(1, opcode);
-        let input_b = self.read_parameter(2, opcode);
-
-        if input_a == 0 {
-            self.instruction_pointer = input_b as usize;
-        } else {
-            self.instruction_pointer += 3;
-        }
-    }
-
-    fn op_lt(&mut self, opcode: i64) {
-        let input_a = self.read_parameter(1, opcode);
-        let input_b = self.read_parameter(2, opcode);
-        let output_c = self.program[self.instruction_pointer + 3];
-
-        if output_c == 677 {
-            panic!("add set to 677");
-        }
-        self.instruction_pointer += 4;
-
-        self.program[output_c as usize] = if input_a < input_b { 1 } else { 0 };
-    }
-
-    fn op_eq(&mut self, opcode: i64) {
-        let input_a = self.read_parameter(1, opcode);
-        let input_b = self.read_parameter(2, opcode);
-        let output_c = self.program[self.instruction_pointer + 3];
-
-        if output_c == 677 {
-            panic!("add set to 677");
-        }
-        self.instruction_pointer += 4;
-
-        self.program[output_c as usize] = if input_a == input_b { 1 } else { 0 };
-    }
-
-    fn op_in(&mut self, _opcode: i64) {
-        let output = self.program[self.instruction_pointer + 1];
-
-        if output == 677 {
-            panic!("add set to 677");
-        }
-        self.instruction_pointer += 2;
-
-        if let Some(input) = self.get_input() {
-            self.program[output as usize] = input;
-        }
-    }
-
-    fn op_out(&mut self, opcode: i64) {
-        let output = self.read_parameter(1, opcode);
-
-        self.instruction_pointer += 2;
-
-        self.set_output(output);
-    }
-
-    fn op_exit(&mut self, _opcode: i64) {
-        self.instruction_pointer += 1;
-        self.is_running = false;
+        self.instruction_pointer += steps;
     }
 
     pub fn run(&mut self) {
         self.is_running = true;
 
         while self.is_running {
-            let opcode = self.program[self.instruction_pointer];
-
-            let op = self.opcode(opcode);
-
-            match op {
-                1 => {
-                    self.op_add(opcode);
-                }
-                2 => {
-                    self.op_mul(opcode);
-                }
-                3 => {
-                    self.op_in(opcode);
-                }
-                4 => {
-                    self.op_out(opcode);
-                }
-                5 => {
-                    self.op_jump_if_true(opcode);
-                }
-                6 => {
-                    self.op_jump_if_false(opcode);
-                }
-                7 => {
-                    self.op_lt(opcode);
-                }
-                8 => {
-                    self.op_eq(opcode);
-                }
-                99 => {
-                    self.op_exit(opcode);
-                }
-                _ => panic!("Invalid opcode"),
-            }
+            self.tick();
         }
+    }
+
+    fn op_add(&mut self, instruction: i64) -> usize {
+        let input_a = self.read_parameter(1, instruction);
+        let input_b = self.read_parameter(2, instruction);
+        let output_c = self.program[self.instruction_pointer + 3];
+
+        self.program[output_c as usize] = input_a + input_b;
+
+        4
+    }
+
+    fn op_mul(&mut self, instruction: i64) -> usize {
+        let input_a = self.read_parameter(1, instruction);
+        let input_b = self.read_parameter(2, instruction);
+        let output_c = self.program[self.instruction_pointer + 3];
+
+        self.program[output_c as usize] = input_a * input_b;
+
+        4
+    }
+
+    fn op_jump_if_true(&mut self, instruction: i64) -> usize {
+        let input_a = self.read_parameter(1, instruction);
+        let input_b = self.read_parameter(2, instruction);
+
+        if input_a != 0 {
+            self.instruction_pointer = input_b as usize;
+
+            0
+        } else {
+            3
+        }
+    }
+
+    fn op_jump_if_false(&mut self, instruction: i64) -> usize {
+        let input_a = self.read_parameter(1, instruction);
+        let input_b = self.read_parameter(2, instruction);
+
+        if input_a == 0 {
+            self.instruction_pointer = input_b as usize;
+            0
+        } else {
+            3
+        }
+    }
+
+    fn op_lt(&mut self, instruction: i64) -> usize {
+        let input_a = self.read_parameter(1, instruction);
+        let input_b = self.read_parameter(2, instruction);
+        let output_c = self.program[self.instruction_pointer + 3];
+
+        self.program[output_c as usize] = if input_a < input_b { 1 } else { 0 };
+
+        4
+    }
+
+    fn op_eq(&mut self, instruction: i64) -> usize {
+        let input_a = self.read_parameter(1, instruction);
+        let input_b = self.read_parameter(2, instruction);
+        let output_c = self.program[self.instruction_pointer + 3];
+
+        self.program[output_c as usize] = if input_a == input_b { 1 } else { 0 };
+
+        4
+    }
+
+    fn op_in(&mut self, _instruction: i64) -> usize {
+        let output = self.program[self.instruction_pointer + 1];
+
+        if let Some(input) = self.get_input() {
+            self.program[output as usize] = input;
+        }
+
+        2
+    }
+
+    fn op_out(&mut self, instruction: i64) -> usize {
+        let output = self.read_parameter(1, instruction);
+
+        self.set_output(output);
+
+        2
+    }
+
+    fn op_exit(&mut self, _instruction: i64) -> usize {
+        self.is_running = false;
+
+        1
     }
 }
 
