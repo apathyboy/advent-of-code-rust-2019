@@ -1,20 +1,20 @@
 use advent_of_code::{parse_intcode_program, IntcodeComputer, IntcodeProgram};
 advent_of_code::solution!(2);
 
-const TARGET_OUTPUT: i64 = 19690720;
+const TARGET_OUTPUT: i128 = 19690720;
 
 const NOUN_POSITION: usize = 1;
-const NOUN_MAX: i64 = 99;
-const DEFAULT_NOUN: i64 = 12;
+const NOUN_MAX: i128 = 99;
+const DEFAULT_NOUN: i128 = 12;
 
 const VERB_POSITION: usize = 2;
-const VERB_MAX: i64 = 99;
-const VERB_DEFAULT: i64 = 2;
+const VERB_MAX: i128 = 99;
+const VERB_DEFAULT: i128 = 2;
 
 const OUTPUT_REGISTER: usize = 0;
-const OUTPUT_FACTOR: i64 = 100;
+const OUTPUT_FACTOR: i128 = 100;
 
-pub fn part_one(input: &str) -> Option<i64> {
+pub fn part_one(input: &str) -> Option<i128> {
     let mut program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
@@ -24,10 +24,10 @@ pub fn part_one(input: &str) -> Option<i64> {
     computer.load_program(&program);
     computer.run();
 
-    computer.register(OUTPUT_REGISTER)
+    computer.get(OUTPUT_REGISTER)
 }
 
-pub fn part_two(input: &str) -> Option<i64> {
+pub fn part_two(input: &str) -> Option<i128> {
     let mut program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
@@ -39,7 +39,7 @@ pub fn part_two(input: &str) -> Option<i64> {
             computer.load_program(&program);
             computer.run();
 
-            if computer.register(OUTPUT_REGISTER)? == TARGET_OUTPUT {
+            if computer.get(OUTPUT_REGISTER)? == TARGET_OUTPUT {
                 return Some(OUTPUT_FACTOR * noun + verb);
             }
         }

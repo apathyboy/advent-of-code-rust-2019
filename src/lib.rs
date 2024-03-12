@@ -7,19 +7,19 @@ pub mod template;
 pub enum ParameterMode {
     Position,
     Immediate,
+    Relative,
 }
 
-pub type IntcodeProgram = Vec<i64>;
-pub type InputSource = Box<dyn Fn() -> i64>;
-pub type OutputSink = Box<dyn FnMut(i64)>;
+pub type IntcodeProgram = Vec<i128>;
 
 pub struct IntcodeComputer {
     instruction_pointer: usize,
-    program: IntcodeProgram,
-    input: VecDeque<i64>,
-    output: Vec<i64>,
+    memory: Vec<i128>,
+    input: VecDeque<i128>,
+    output: Vec<i128>,
     is_running: bool,
     ticks: usize,
+    relative_base: i128,
 }
 
 impl Default for IntcodeComputer {
@@ -32,11 +32,12 @@ impl IntcodeComputer {
     pub fn new() -> Self {
         Self {
             instruction_pointer: 0,
-            program: IntcodeProgram::new(),
+            memory: Vec::new(),
             input: VecDeque::new(),
             output: Vec::new(),
             is_running: true,
             ticks: 0,
+            relative_base: 0,
         }
     }
 
@@ -50,75 +51,98 @@ impl IntcodeComputer {
     }
 
     pub fn load_program(&mut self, program: &IntcodeProgram) {
-        self.program = program.clone();
+        self.memory = program.clone();
 
         self.reset();
     }
 
-    pub fn memory_snapshot(&self) -> &[i64] {
-        &self.program
+    pub fn memory_snapshot(&self) -> &[i128] {
+        &self.memory
     }
 
-    pub fn register(&self, register: usize) -> Option<i64> {
-        if register < self.program.len() {
-            Some(self.program[register])
-        } else {
-            None
+    pub fn get(&mut self, address: usize) -> Option<i128> {
+        if address >= self.memory.len() {
+            self.memory.resize(address + 100, 0);
         }
+
+        Some(self.memory[address])
+    }
+
+    pub fn set(&mut self, address: usize, val: i128) {
+        if address >= self.memory.len() {
+            self.memory.resize(address + 100, 0);
+        }
+
+        self.memory[address] = val;
     }
 
     pub fn read_program(&self) -> IntcodeProgram {
-        self.program.clone()
+        self.memory.clone()
     }
 
-    pub fn set_input(&mut self, val: i64) {
+    pub fn set_input(&mut self, val: i128) {
         self.input.push_back(val);
     }
 
-    fn get_input(&mut self) -> Option<i64> {
+    fn get_input(&mut self) -> Option<i128> {
         self.input.pop_front()
     }
 
-    fn set_output(&mut self, val: i64) {
+    fn set_output(&mut self, val: i128) {
         self.output.push(val);
     }
 
-    pub fn get_output(&self) -> &[i64] {
+    pub fn get_output(&self) -> &[i128] {
         &self.output
     }
 
-    pub fn get_next_output(&mut self) -> Option<i64> {
+    pub fn get_next_output(&mut self) -> Option<i128> {
         self.output.pop()
     }
 
-    fn parameter_mode(&self, instruction: i64, parameter: i8) -> ParameterMode {
+    fn parameter_mode(&self, instruction: i128, parameter: i8) -> ParameterMode {
         let mode = instruction as usize / (10_usize.pow(parameter as u32 + 1)) % 10;
 
         match mode {
             0 => ParameterMode::Position,
             1 => ParameterMode::Immediate,
+            2 => ParameterMode::Relative,
             _ => panic!("Invalid parameter mode"),
         }
     }
 
-    fn opcode(&self, instruction: i64) -> i8 {
+    fn opcode(&self, instruction: i128) -> i8 {
         (instruction % 100) as i8
     }
 
-    fn read_parameter(&self, parameter: i8, instruction: i64) -> i64 {
-        let index = (self.instruction_pointer + parameter as usize) % self.program.len();
+    fn read_parameter(&mut self, parameter: i8, instruction: i128) -> Option<i128> {
         let mode = self.parameter_mode(instruction, parameter);
 
         match mode {
-            ParameterMode::Position => self.program[self.program[index] as usize],
-            ParameterMode::Immediate => self.program[index],
+            ParameterMode::Immediate => {
+                Some(self.get(self.instruction_pointer + parameter as usize)?)
+            }
+            _ => {
+                let offset = self.read_destination(parameter, instruction)?;
+                self.get(offset)
+            }
+        }
+    }
+
+    fn read_destination(&mut self, parameter: i8, instruction: i128) -> Option<usize> {
+        let index = self.get(self.instruction_pointer + parameter as usize)?;
+        let mode = self.parameter_mode(instruction, parameter);
+        match mode {
+            ParameterMode::Immediate => panic!("Cannot read destination mode as immediate"),
+            ParameterMode::Position => Some(index as usize),
+            ParameterMode::Relative => Some((self.relative_base + index) as usize),
         }
     }
 
     pub fn tick(&mut self) {
         self.ticks += 1;
 
-        let instruction = self.program[self.instruction_pointer];
+        let instruction = self.memory[self.instruction_pointer];
 
         let op = self.opcode(instruction);
 
@@ -131,6 +155,7 @@ impl IntcodeComputer {
             6 => self.op_jump_if_false(instruction),
             7 => self.op_lt(instruction),
             8 => self.op_eq(instruction),
+            9 => self.op_adj_base(instruction),
             99 => self.op_exit(instruction),
             _ => panic!("Invalid instruction: {instruction}"),
         };
@@ -144,29 +169,47 @@ impl IntcodeComputer {
         }
     }
 
-    fn op_add(&mut self, instruction: i64) -> usize {
-        let input_a = self.read_parameter(1, instruction);
-        let input_b = self.read_parameter(2, instruction);
-        let output_c = self.program[self.instruction_pointer + 3];
+    fn op_add(&mut self, instruction: i128) -> usize {
+        let input_a = self.read_parameter(1, instruction).unwrap();
+        let input_b = self.read_parameter(2, instruction).unwrap();
+        let output = self.read_destination(3, instruction).unwrap();
 
-        self.program[output_c as usize] = input_a + input_b;
-
-        4
-    }
-
-    fn op_mul(&mut self, instruction: i64) -> usize {
-        let input_a = self.read_parameter(1, instruction);
-        let input_b = self.read_parameter(2, instruction);
-        let output_c = self.program[self.instruction_pointer + 3];
-
-        self.program[output_c as usize] = input_a * input_b;
+        self.set(output, input_a + input_b);
 
         4
     }
 
-    fn op_jump_if_true(&mut self, instruction: i64) -> usize {
-        let input_a = self.read_parameter(1, instruction);
-        let input_b = self.read_parameter(2, instruction);
+    fn op_mul(&mut self, instruction: i128) -> usize {
+        let input_a = self.read_parameter(1, instruction).unwrap();
+        let input_b = self.read_parameter(2, instruction).unwrap();
+        let output = self.read_destination(3, instruction).unwrap();
+
+        self.set(output, input_a * input_b);
+
+        4
+    }
+
+    fn op_in(&mut self, instruction: i128) -> usize {
+        let output = self.read_destination(1, instruction).unwrap();
+
+        if let Some(input) = self.get_input() {
+            self.set(output, input);
+        }
+
+        2
+    }
+
+    fn op_out(&mut self, instruction: i128) -> usize {
+        let output = self.read_parameter(1, instruction).unwrap();
+
+        self.set_output(output);
+
+        2
+    }
+
+    fn op_jump_if_true(&mut self, instruction: i128) -> usize {
+        let input_a = self.read_parameter(1, instruction).unwrap();
+        let input_b = self.read_parameter(2, instruction).unwrap();
 
         if input_a != 0 {
             self.instruction_pointer = input_b as usize;
@@ -177,9 +220,9 @@ impl IntcodeComputer {
         }
     }
 
-    fn op_jump_if_false(&mut self, instruction: i64) -> usize {
-        let input_a = self.read_parameter(1, instruction);
-        let input_b = self.read_parameter(2, instruction);
+    fn op_jump_if_false(&mut self, instruction: i128) -> usize {
+        let input_a = self.read_parameter(1, instruction).unwrap();
+        let input_b = self.read_parameter(2, instruction).unwrap();
 
         if input_a == 0 {
             self.instruction_pointer = input_b as usize;
@@ -189,45 +232,39 @@ impl IntcodeComputer {
         }
     }
 
-    fn op_lt(&mut self, instruction: i64) -> usize {
-        let input_a = self.read_parameter(1, instruction);
-        let input_b = self.read_parameter(2, instruction);
-        let output_c = self.program[self.instruction_pointer + 3];
+    fn op_lt(&mut self, instruction: i128) -> usize {
+        let input_a = self.read_parameter(1, instruction).unwrap();
+        let input_b = self.read_parameter(2, instruction).unwrap();
+        let output = self.read_destination(3, instruction).unwrap();
 
-        self.program[output_c as usize] = if input_a < input_b { 1 } else { 0 };
+        let result = if input_a < input_b { 1 } else { 0 };
 
-        4
-    }
-
-    fn op_eq(&mut self, instruction: i64) -> usize {
-        let input_a = self.read_parameter(1, instruction);
-        let input_b = self.read_parameter(2, instruction);
-        let output_c = self.program[self.instruction_pointer + 3];
-
-        self.program[output_c as usize] = if input_a == input_b { 1 } else { 0 };
+        self.set(output, result);
 
         4
     }
 
-    fn op_in(&mut self, _instruction: i64) -> usize {
-        let output = self.program[self.instruction_pointer + 1];
+    fn op_eq(&mut self, instruction: i128) -> usize {
+        let input_a = self.read_parameter(1, instruction).unwrap();
+        let input_b = self.read_parameter(2, instruction).unwrap();
+        let output = self.read_destination(3, instruction).unwrap();
 
-        if let Some(input) = self.get_input() {
-            self.program[output as usize] = input;
-        }
+        let result = if input_a == input_b { 1 } else { 0 };
+
+        self.set(output, result);
+
+        4
+    }
+
+    fn op_adj_base(&mut self, instruction: i128) -> usize {
+        let input_a = self.read_parameter(1, instruction).unwrap();
+
+        self.relative_base += input_a;
 
         2
     }
 
-    fn op_out(&mut self, instruction: i64) -> usize {
-        let output = self.read_parameter(1, instruction);
-
-        self.set_output(output);
-
-        2
-    }
-
-    fn op_exit(&mut self, _instruction: i64) -> usize {
+    fn op_exit(&mut self, _instruction: i128) -> usize {
         self.is_running = false;
 
         1

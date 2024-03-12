@@ -2,7 +2,7 @@ use advent_of_code::{parse_intcode_program, IntcodeComputer, IntcodeProgram};
 
 advent_of_code::solution!(5);
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<i128> {
     let program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
@@ -12,10 +12,10 @@ pub fn part_one(input: &str) -> Option<u32> {
     computer.run();
 
     // return the last value in output
-    computer.get_output().last().copied().map(|val| val as u32)
+    computer.get_next_output()
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<i128> {
     let program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
@@ -25,7 +25,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     computer.run();
 
     // return the last value in output
-    computer.get_output().last().copied().map(|val| val as u32)
+    computer.get_next_output()
 }
 
 #[cfg(test)]
@@ -46,7 +46,7 @@ mod tests {
     #[case::position_mode_jump("3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9", 32, 1)]
     #[case::immediate_mode_jump("3,3,1105,-1,9,1101,0,0,12,4,12,99,1", 0, 0)]
     #[case::immediate_mode_jump("3,3,1105,-1,9,1101,0,0,12,4,12,99,1", 32, 1)]
-    fn test_simple_intcode(#[case] program: &str, #[case] input: i64, #[case] expected: u32) {
+    fn test_simple_intcode(#[case] program: &str, #[case] input: i128, #[case] expected: i128) {
         let program: IntcodeProgram = parse_intcode_program(program).unwrap();
         let mut computer = IntcodeComputer::default();
 
@@ -56,7 +56,7 @@ mod tests {
         computer.run();
 
         // return the last value in output
-        let result = computer.get_output().last().copied().map(|val| val as u32);
+        let result = computer.get_next_output();
         assert_eq!(result, Some(expected));
     }
 
@@ -64,7 +64,7 @@ mod tests {
     #[case(7, 999)]
     #[case(8, 1000)]
     #[case(9, 1001)]
-    fn test_complex_intcode(#[case] input: i64, #[case] expected: u32) {
+    fn test_complex_intcode(#[case] input: i128, #[case] expected: i128) {
         let program: IntcodeProgram =
             parse_intcode_program(&advent_of_code::template::read_file("examples", DAY)).unwrap();
         let mut computer = IntcodeComputer::default();
@@ -75,7 +75,7 @@ mod tests {
         computer.run();
 
         // return the last value in output
-        let result = computer.get_output().last().copied().map(|val| val as u32);
+        let result = computer.get_next_output();
         assert_eq!(result, Some(expected));
     }
 }

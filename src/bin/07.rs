@@ -3,7 +3,7 @@ use itertools::Itertools;
 
 advent_of_code::solution!(7);
 
-pub fn part_one(input: &str) -> Option<i64> {
+pub fn part_one(input: &str) -> Option<i128> {
     let program: IntcodeProgram = parse_intcode_program(input)?;
 
     let mut max_thruster_signal = 0;
@@ -22,7 +22,7 @@ pub fn part_one(input: &str) -> Option<i64> {
             computer.run();
 
             // return the last value in output
-            input_signal = computer.get_output().last().copied()?;
+            input_signal = computer.get_next_output()?;
         }
 
         if input_signal > max_thruster_signal {
@@ -33,7 +33,7 @@ pub fn part_one(input: &str) -> Option<i64> {
     Some(max_thruster_signal)
 }
 
-pub fn part_two(input: &str) -> Option<i64> {
+pub fn part_two(input: &str) -> Option<i128> {
     let program: IntcodeProgram = parse_intcode_program(input)?;
 
     let mut max_thruster_signal = 0;
