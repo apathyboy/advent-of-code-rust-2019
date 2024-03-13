@@ -106,6 +106,10 @@ impl IntcodeComputer {
         self.output.pop()
     }
 
+    pub fn has_output(&self) -> bool {
+        !self.output.is_empty()
+    }
+
     fn parameter_mode(&self, instruction: i128, parameter: i8) -> ParameterMode {
         let mode = instruction as usize / (10_usize.pow(parameter as u32 + 1)) % 10;
 

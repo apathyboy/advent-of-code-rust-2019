@@ -50,7 +50,7 @@ pub fn part_two(input: &str) -> Option<String> {
     for row in image.chunks(25) {
         for p in row {
             if *p == 1 {
-                output.push('#');
+                output.push('█');
             } else {
                 output.push(' ');
             }
