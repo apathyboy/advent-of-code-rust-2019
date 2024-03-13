@@ -50,6 +50,12 @@ impl IntcodeComputer {
         self.is_running = true;
     }
 
+    pub fn load_program_from_str(&mut self, input: &str) {
+        if let Some(program) = parse_intcode_program(input) {
+            self.load_program(&program);
+        }
+    }
+
     pub fn load_program(&mut self, program: &IntcodeProgram) {
         self.memory = program.clone();
 

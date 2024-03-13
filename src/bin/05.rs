@@ -1,14 +1,13 @@
-use advent_of_code::{parse_intcode_program, IntcodeComputer, IntcodeProgram};
+use advent_of_code::IntcodeComputer;
 
 advent_of_code::solution!(5);
 
 pub fn part_one(input: &str) -> Option<i128> {
-    let program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
     computer.set_input(1);
 
-    computer.load_program(&program);
+    computer.load_program_from_str(input);
     computer.run();
 
     // return the last value in output
@@ -16,12 +15,11 @@ pub fn part_one(input: &str) -> Option<i128> {
 }
 
 pub fn part_two(input: &str) -> Option<i128> {
-    let program: IntcodeProgram = parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::default();
 
     computer.set_input(5);
 
-    computer.load_program(&program);
+    computer.load_program_from_str(input);
     computer.run();
 
     // return the last value in output
@@ -47,12 +45,11 @@ mod tests {
     #[case::immediate_mode_jump("3,3,1105,-1,9,1101,0,0,12,4,12,99,1", 0, 0)]
     #[case::immediate_mode_jump("3,3,1105,-1,9,1101,0,0,12,4,12,99,1", 32, 1)]
     fn test_simple_intcode(#[case] program: &str, #[case] input: i128, #[case] expected: i128) {
-        let program: IntcodeProgram = parse_intcode_program(program).unwrap();
         let mut computer = IntcodeComputer::default();
 
         computer.set_input(input);
 
-        computer.load_program(&program);
+        computer.load_program_from_str(program);
         computer.run();
 
         // return the last value in output
@@ -65,13 +62,11 @@ mod tests {
     #[case(8, 1000)]
     #[case(9, 1001)]
     fn test_complex_intcode(#[case] input: i128, #[case] expected: i128) {
-        let program: IntcodeProgram =
-            parse_intcode_program(&advent_of_code::template::read_file("examples", DAY)).unwrap();
         let mut computer = IntcodeComputer::default();
 
         computer.set_input(input);
 
-        computer.load_program(&program);
+        computer.load_program_from_str(&advent_of_code::template::read_file("examples", DAY));
         computer.run();
 
         // return the last value in output
