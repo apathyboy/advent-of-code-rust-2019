@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 advent_of_code::solution!(14);
 
@@ -102,8 +102,6 @@ pub fn part_two(input: &str) -> Option<u64> {
     let reactions = parse_input(input);
     let one_fuel = calculate_ore(&reactions, 1);
 
-    let mut tried_fuels = HashSet::new();
-
     let mut try_fuel = 1_000_000_000_000 / one_fuel;
 
     loop {
@@ -112,7 +110,6 @@ pub fn part_two(input: &str) -> Option<u64> {
             break;
         }
 
-        tried_fuels.insert(try_fuel);
         try_fuel *= 2;
     }
 
@@ -121,9 +118,6 @@ pub fn part_two(input: &str) -> Option<u64> {
 
     while lower < upper {
         let mid = (lower + upper) / 2;
-        if tried_fuels.contains(&mid) {
-            break;
-        }
 
         let ore = calculate_ore(&reactions, mid);
         if ore > 1_000_000_000_000 {
