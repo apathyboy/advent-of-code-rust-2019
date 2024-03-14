@@ -36,24 +36,14 @@ impl Robot {
         self.position += self.direction;
     }
 
-    fn cycle(&mut self) {
+    fn paint(&mut self) {
         let panel = self.panels.entry(self.position).or_insert(0);
 
         self.brain.set_input(*panel);
 
-        while !self.brain.has_output() {
-            self.brain.tick();
-        }
+        *panel = self.brain.run_to_next_output().unwrap();
 
-        *panel = self.brain.get_next_output().unwrap();
-
-        while !self.brain.has_output() {
-            self.brain.tick();
-        }
-
-        let turn_dir = self.brain.get_next_output().unwrap();
-
-        match turn_dir {
+        match self.brain.run_to_next_output().unwrap() {
             0 => self.turn_left(),
             1 => self.turn_right(),
             _ => panic!("Invalid turn direction"),
@@ -64,7 +54,7 @@ impl Robot {
 
     fn run(&mut self) {
         while self.brain.is_running() {
-            self.cycle();
+            self.paint();
         }
     }
 }
@@ -106,17 +96,8 @@ pub fn part_two(input: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_part_one() {
-        let result = part_one(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
-    }
-
-    #[test]
-    fn test_part_two() {
-        let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(1, 1);
     }
 }

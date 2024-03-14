@@ -45,6 +45,10 @@ impl IntcodeComputer {
         self.is_running
     }
 
+    pub fn ticks(&self) -> usize {
+        self.ticks
+    }
+
     pub fn reset(&mut self) {
         self.instruction_pointer = 0;
         self.is_running = true;
@@ -171,6 +175,14 @@ impl IntcodeComputer {
         };
 
         self.instruction_pointer += steps;
+    }
+
+    pub fn run_to_next_output(&mut self) -> Option<i128> {
+        while !self.has_output() {
+            self.tick();
+        }
+
+        self.get_next_output()
     }
 
     pub fn run(&mut self) {
