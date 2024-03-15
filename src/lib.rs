@@ -12,6 +12,7 @@ pub enum ParameterMode {
 
 pub type IntcodeProgram = Vec<i128>;
 
+#[derive(Debug, Clone)]
 pub struct IntcodeComputer {
     instruction_pointer: usize,
     memory: Vec<i128>,
