@@ -31,7 +31,7 @@ fn explore(computer: IntcodeComputer, map: &mut HashMap<IVec2, i128>, position: 
 
         computer.set_input(*direction);
 
-        let status = computer.run_to_next_output().unwrap();
+        let status = computer.run_until_output().unwrap();
 
         map.insert(new_position, status);
 

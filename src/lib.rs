@@ -178,7 +178,7 @@ impl IntcodeComputer {
         self.instruction_pointer += steps;
     }
 
-    pub fn run_to_next_output(&mut self) -> Option<i128> {
+    pub fn run_until_output(&mut self) -> Option<i128> {
         while !self.has_output() {
             self.tick();
         }

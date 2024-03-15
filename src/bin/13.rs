@@ -73,9 +73,9 @@ pub fn part_one(input: &str) -> Option<usize> {
     let mut screen = HashMap::new();
 
     while arcade_cabinet.is_running() {
-        let x = arcade_cabinet.run_to_next_output()?;
-        let y = arcade_cabinet.run_to_next_output()?;
-        let tile_id = arcade_cabinet.run_to_next_output()?;
+        let x = arcade_cabinet.run_until_output()?;
+        let y = arcade_cabinet.run_until_output()?;
+        let tile_id = arcade_cabinet.run_until_output()?;
 
         let pos = IVec2::new(x as i32, y as i32);
 
@@ -94,9 +94,9 @@ pub fn part_two(input: &str) -> Option<i128> {
     let mut screen = HashMap::new();
 
     while arcade_cabinet.is_running() {
-        let x = arcade_cabinet.run_to_next_output()?;
-        let y = arcade_cabinet.run_to_next_output()?;
-        let tile_id = arcade_cabinet.run_to_next_output()?;
+        let x = arcade_cabinet.run_until_output()?;
+        let y = arcade_cabinet.run_until_output()?;
+        let tile_id = arcade_cabinet.run_until_output()?;
 
         let pos = IVec2::new(x as i32, y as i32);
 

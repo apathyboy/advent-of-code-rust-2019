@@ -53,7 +53,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     for _ in 0..100 {
         let mut sum = 0;
         for n in input.iter_mut().rev() {
-            sum = (sum + *n as u32) % 10;
+            sum = (sum + *n) % 10;
             *n = sum;
         }
     }

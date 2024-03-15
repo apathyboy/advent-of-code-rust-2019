@@ -41,9 +41,9 @@ impl Robot {
 
         self.brain.set_input(*panel);
 
-        *panel = self.brain.run_to_next_output().unwrap();
+        *panel = self.brain.run_until_output().unwrap();
 
-        match self.brain.run_to_next_output().unwrap() {
+        match self.brain.run_until_output().unwrap() {
             0 => self.turn_left(),
             1 => self.turn_right(),
             _ => panic!("Invalid turn direction"),
