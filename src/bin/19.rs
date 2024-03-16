@@ -42,11 +42,10 @@ pub fn part_two(input: &str) -> Option<i128> {
     let mut y = 300;
 
     loop {
-        // find the leftmost point in the row inside the beam
         while !is_point_in_beam(x, y, computer.clone()) {
             x += 1;
         }
-        // check row to see if there's a point on it that's the top left corner of the square
+
         while is_point_in_beam(x + 99, y, computer.clone()) {
             if is_point_in_beam(x, y + 99, computer.clone())
                 && is_point_in_beam(x + 99, y + 99, computer.clone())
