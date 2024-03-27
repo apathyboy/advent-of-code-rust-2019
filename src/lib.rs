@@ -21,6 +21,8 @@ pub struct IntcodeComputer {
     is_running: bool,
     ticks: usize,
     relative_base: i128,
+    default_input: Option<i128>,
+    input_requested: bool,
 }
 
 impl Default for IntcodeComputer {
@@ -39,6 +41,8 @@ impl IntcodeComputer {
             is_running: true,
             ticks: 0,
             relative_base: 0,
+            default_input: None,
+            input_requested: false,
         }
     }
 
@@ -91,12 +95,24 @@ impl IntcodeComputer {
         self.memory.clone()
     }
 
+    pub fn has_input(&self) -> bool {
+        !self.input.is_empty()
+    }
+
     pub fn set_input(&mut self, val: i128) {
         self.input.push_back(val);
     }
 
+    pub fn set_default_input(&mut self, val: i128) {
+        self.default_input = Some(val);
+    }
+
     fn get_input(&mut self) -> Option<i128> {
-        self.input.pop_front()
+        if self.input.is_empty() {
+            self.default_input
+        } else {
+            self.input.pop_front()
+        }
     }
 
     fn set_output(&mut self, val: i128) {
@@ -156,6 +172,7 @@ impl IntcodeComputer {
 
     pub fn tick(&mut self) {
         self.ticks += 1;
+        self.input_requested = false;
 
         let instruction = self.memory[self.instruction_pointer];
 
@@ -183,13 +200,25 @@ impl IntcodeComputer {
             self.tick();
         }
 
+        self.input_requested = false;
+
         self.get_next_output()
+    }
+
+    pub fn run_until_io(&mut self) {
+        while !self.has_output() && !self.input_requested {
+            self.tick();
+        }
+
+        self.input_requested = false;
     }
 
     pub fn run(&mut self) {
         while self.is_running {
             self.tick();
         }
+
+        self.input_requested = false;
     }
 
     fn op_add(&mut self, instruction: i128) -> usize {
@@ -214,6 +243,8 @@ impl IntcodeComputer {
 
     fn op_in(&mut self, instruction: i128) -> usize {
         let output = self.read_destination(1, instruction).unwrap();
+
+        self.input_requested = true;
 
         if let Some(input) = self.get_input() {
             self.set(output, input);
