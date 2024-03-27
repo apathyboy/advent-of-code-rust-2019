@@ -8,13 +8,13 @@ pub fn part_one(input: &str) -> Option<i128> {
     computer.load_program_from_str(input);
 
     let input = r"NOT B J
-    NOT C T
-    OR T J
-    AND D J
-    NOT A T
-    OR T J
-    WALK
-    ";
+                        NOT C T
+                        OR T J
+                        AND D J
+                        NOT A T
+                        OR T J
+                        WALK
+                        ";
 
     for c in input.chars() {
         computer.set_input(c as i128);
@@ -31,14 +31,14 @@ pub fn part_two(input: &str) -> Option<i128> {
     computer.load_program_from_str(input);
 
     let input = r"NOT B J
-NOT C T
-OR T J
-AND D J
-AND H J
-NOT A T
-OR T J
-RUN
-";
+                        NOT C T
+                        OR T J
+                        AND D J
+                        AND H J
+                        NOT A T
+                        OR T J
+                        RUN
+                        ";
 
     for c in input.chars() {
         computer.set_input(c as i128);
