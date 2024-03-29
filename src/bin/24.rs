@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use glam::IVec2;
 
@@ -59,45 +59,6 @@ fn tick(map: &HashMap<IVec2, bool>) -> HashMap<IVec2, bool> {
     new_map
 }
 
-fn recursive_tick(recursive_map: &mut Vec<HashMap<IVec2, bool>>) {
-    // check for bugs along the edges recursive levels of the map along with the 4 cardinal directions
-    let mut new_recursive_map = recursive_map.to_vec();
-
-    for (level, map) in recursive_map.iter().enumerate() {
-        let min_x = map.keys().map(|pos| pos.x).min().unwrap();
-        let max_x = map.keys().map(|pos| pos.x).max().unwrap();
-        let min_y = map.keys().map(|pos| pos.y).min().unwrap();
-        let max_y = map.keys().map(|pos| pos.y).max().unwrap();
-
-        for y in min_y..=max_y {
-            for x in min_x..=max_x {
-                if x == 2 && y == 2 {
-                    continue;
-                }
-
-                let pos = IVec2::new(x, y);
-                let adjacent_bugs = [
-                    pos + IVec2::Y,
-                    pos + IVec2::NEG_Y,
-                    pos + IVec2::X,
-                    pos + IVec2::NEG_X,
-                ]
-                .iter()
-                .filter(|&pos| *map.get(pos).unwrap_or(&false))
-                .count();
-                let new_is_bug = match (map.get(&pos).unwrap_or(&false), adjacent_bugs) {
-                    (true, 1) => true,
-                    (true, _) => false,
-                    (false, 1..=2) => true,
-                    (false, _) => false,
-                };
-                new_recursive_map[level].insert(pos, new_is_bug);
-            }
-        }
-    }
-    *recursive_map = new_recursive_map;
-}
-
 fn biodiversity_rating(map: &HashMap<IVec2, bool>) -> u32 {
     let mut rating = 0;
     for (pos, is_bug) in map.iter() {
@@ -107,6 +68,100 @@ fn biodiversity_rating(map: &HashMap<IVec2, bool>) -> u32 {
         }
     }
     rating
+}
+
+type Cell = (isize, isize, isize);
+
+struct Grid {
+    rows: isize,
+    cols: isize,
+    bugs: HashSet<Cell>,
+}
+
+const DIRS: [(isize, isize); 4] = [(-1, 0), (1, 0), (0, 1), (0, -1)];
+
+impl Grid {
+    fn from_str(input: &str) -> Option<Grid> {
+        let (mut bugs, mut rows, mut cols) = (HashSet::new(), 0isize, 0isize);
+
+        for (r, row) in input.lines().enumerate() {
+            for (c, cell) in row.chars().enumerate() {
+                cols = cols.max(c as isize + 1);
+                rows = rows.max(r as isize + 1);
+                if cell == '#' {
+                    bugs.insert((r as isize, c as isize, 0));
+                }
+            }
+        }
+
+        Some(Grid { rows, cols, bugs })
+    }
+
+    fn adj_cells(&self, cell: &Cell) -> Vec<Cell> {
+        let (r, c, l) = cell;
+
+        let mut adj = Vec::new();
+
+        for (dr, dc) in &DIRS {
+            let (nr, nc, nl) = (r + dr, c + dc, *l);
+
+            if nc == self.cols / 2 && nr == self.rows / 2 {
+                if *dr == 0 {
+                    for nr in 0..self.rows {
+                        adj.push(match dc {
+                            1 => (nr, 0, nl - 1),
+                            _ => (nr, self.cols - 1, nl - 1),
+                        });
+                    }
+                } else {
+                    for nc in 0..self.cols {
+                        adj.push(match dr {
+                            1 => (0, nc, nl - 1),
+                            _ => (self.rows - 1, nc, nl - 1),
+                        });
+                    }
+                }
+            } else if nr < 0 || nc < 0 || nr >= self.rows || nc >= self.cols {
+                adj.push((self.rows / 2 + dr, self.cols / 2 + dc, l + 1));
+            } else {
+                adj.push((nr, nc, nl));
+            }
+        }
+
+        adj
+    }
+
+    fn adj_bugs_count(&self, cell: &Cell) -> usize {
+        self.adj_cells(cell)
+            .into_iter()
+            .filter(|cell| self.bugs.contains(cell))
+            .count()
+    }
+
+    fn tick(&mut self) {
+        let mut bugs = HashSet::new();
+
+        for bug in &self.bugs {
+            if self.adj_bugs_count(bug) == 1 {
+                bugs.insert(*bug);
+            }
+
+            for infested in self.adj_cells(bug) {
+                if !&self.bugs.contains(&infested) {
+                    let count = self.adj_bugs_count(&infested);
+                    if count == 1 || count == 2 {
+                        bugs.insert(infested);
+                    }
+                }
+            }
+        }
+
+        self.bugs = bugs;
+    }
+
+    fn count(&self) -> usize {
+        self.bugs.len()
+    }
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -127,33 +182,12 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let map = parse_map(input);
-
-    // create an empty map for each level of recursion
-    let mut empty_map = HashMap::new();
-    for y in 0..5 {
-        for x in 0..5 {
-            if x == 2 && y == 2 {
-                continue;
-            }
-            empty_map.insert(IVec2::new(x, y), false);
-        }
+    let mut grid = Grid::from_str(input).unwrap();
+    for _ in 0..200 {
+        grid.tick();
     }
 
-    let mut recursive_map = vec![empty_map; 201];
-
-    recursive_map[100] = map.clone();
-
-    for _ in 0..10 {
-        recursive_tick(&mut recursive_map);
-    }
-
-    let bugs = recursive_map
-        .iter()
-        .map(|map| map.values().filter(|&&b| b).count())
-        .sum::<usize>();
-
-    Some(bugs as u32)
+    Some(grid.count() as u32)
 }
 
 #[cfg(test)]
