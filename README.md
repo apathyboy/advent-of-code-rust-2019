@@ -32,6 +32,7 @@ Solutions for [Advent of Code](https://adventofcode.com/) in [Rust](https://www.
 | [Day 21](https://adventofcode.com/2019/day/21) | ⭐ | ⭐ |
 | [Day 22](https://adventofcode.com/2019/day/22) | ⭐ | ⭐ |
 | [Day 23](https://adventofcode.com/2019/day/23) | ⭐ | ⭐ |
+| [Day 24](https://adventofcode.com/2019/day/24) | ⭐ | ⭐ |
 <!--- advent_readme_stars table --->
 
 <!--- benchmarking table --->
@@ -39,31 +40,32 @@ Solutions for [Advent of Code](https://adventofcode.com/) in [Rust](https://www.
 
 | Day | Part 1 | Part 2 |
 | :---: | :---: | :---:  |
-| [Day 1](./src/bin/01.rs) | `2.1µs` | `2.4µs` |
-| [Day 2](./src/bin/02.rs) | `2.5µs` | `706.6µs` |
-| [Day 3](./src/bin/03.rs) | `129.4µs` | `127.7µs` |
+| [Day 1](./src/bin/01.rs) | `1.8µs` | `2.3µs` |
+| [Day 2](./src/bin/02.rs) | `3.7µs` | `16.7ms` |
+| [Day 3](./src/bin/03.rs) | `128.1µs` | `126.9µs` |
 | [Day 4](./src/bin/04.rs) | `1.0ms` | `1.1ms` |
-| [Day 5](./src/bin/05.rs) | `13.8µs` | `13.7µs` |
-| [Day 6](./src/bin/06.rs) | `558.1µs` | `586.9µs` |
-| [Day 7](./src/bin/07.rs) | `148.0µs` | `324.6µs` |
-| [Day 8](./src/bin/08.rs) | `27.7µs` | `29.7µs` |
-| [Day 9](./src/bin/09.rs) | `25.2µs` | `4.5ms` |
-| [Day 10](./src/bin/10.rs) | `6.8ms` | `6.9ms` |
-| [Day 11](./src/bin/11.rs) | `1.6ms` | `132.5µs` |
-| [Day 12](./src/bin/12.rs) | `28.0µs` | `7.9ms` |
-| [Day 13](./src/bin/13.rs) | `287.1µs` | `13.4ms` |
-| [Day 14](./src/bin/14.rs) | `120.3µs` | `3.9ms` |
-| [Day 15](./src/bin/15.rs) | `3.1ms` | `3.0ms` |
+| [Day 5](./src/bin/05.rs) | `14.8µs` | `15.4µs` |
+| [Day 6](./src/bin/06.rs) | `585.8µs` | `589.1µs` |
+| [Day 7](./src/bin/07.rs) | `211.6µs` | `483.5µs` |
+| [Day 8](./src/bin/08.rs) | `27.8µs` | `29.4µs` |
+| [Day 9](./src/bin/09.rs) | `25.7µs` | `4.5ms` |
+| [Day 10](./src/bin/10.rs) | `6.7ms` | `6.8ms` |
+| [Day 11](./src/bin/11.rs) | `1.6ms` | `133.3µs` |
+| [Day 12](./src/bin/12.rs) | `28.0µs` | `8.1ms` |
+| [Day 13](./src/bin/13.rs) | `286.2µs` | `13.4ms` |
+| [Day 14](./src/bin/14.rs) | `121.8µs` | `4.0ms` |
+| [Day 15](./src/bin/15.rs) | `3.1ms` | `2.9ms` |
 | [Day 16](./src/bin/16.rs) | `26.4ms` | `1.6s` |
 | [Day 17](./src/bin/17.rs) | `1.0ms` | `1.4ms` |
-| [Day 18](./src/bin/18.rs) | `76.8ms` | `97.4ms` |
-| [Day 19](./src/bin/19.rs) | `12.5ms` | `11.2ms` |
-| [Day 20](./src/bin/20.rs) | `1.9ms` | `116.6ms` |
-| [Day 21](./src/bin/21.rs) | `436.5µs` | `6.6ms` |
-| [Day 22](./src/bin/22.rs) | `1.5ms` | `10.7µs` |
+| [Day 18](./src/bin/18.rs) | `77.0ms` | `90.8ms` |
+| [Day 19](./src/bin/19.rs) | `12.6ms` | `11.2ms` |
+| [Day 20](./src/bin/20.rs) | `1.9ms` | `115.2ms` |
+| [Day 21](./src/bin/21.rs) | `437.3µs` | `6.7ms` |
+| [Day 22](./src/bin/22.rs) | `1.6ms` | `10.6µs` |
 | [Day 23](./src/bin/23.rs) | `2.8ms` | `6.4ms` |
+| [Day 24](./src/bin/24.rs) | `227.9µs` | `226.5ms` |
 
-**Total: 2019.41ms**
+**Total: 2254.89ms**
 <!--- benchmarking table --->
 
 *Benchmarks performed on a 2021 M1 Macbook Pro, 16GB*
