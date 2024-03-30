@@ -103,6 +103,14 @@ impl IntcodeComputer {
         self.input.push_back(val);
     }
 
+    pub fn add_input_str(&mut self, input: &str) {
+        for c in input.chars() {
+            self.input.push_back(c as i128);
+        }
+
+        self.input.push_back(10);
+    }
+
     pub fn set_default_input(&mut self, val: i128) {
         self.default_input = Some(val);
     }
