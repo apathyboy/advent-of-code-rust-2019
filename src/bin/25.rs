@@ -9,7 +9,7 @@ fn read_input() -> String {
     input.trim().to_string()
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<String> {
     let mut computer = IntcodeComputer::new();
     computer.load_program_from_str(input);
 
@@ -44,11 +44,11 @@ pub fn part_one(input: &str) -> Option<u32> {
         "west",
     ]);
 
+    let mut result = "";
+
     loop {
         match computer.run_until_output() {
             Some(10) => {
-                println!("{}", output_buffer);
-
                 if output_buffer.contains("Command?") {
                     let input = if let Some(action) = actions.pop_front() {
                         action.to_owned()
@@ -57,6 +57,9 @@ pub fn part_one(input: &str) -> Option<u32> {
                     };
 
                     computer.add_input_str(&input);
+                } else if output_buffer.contains("airlock") {
+                    result = output_buffer.trim();
+                    break;
                 }
 
                 output_buffer.clear();
@@ -68,9 +71,7 @@ pub fn part_one(input: &str) -> Option<u32> {
         }
     }
 
-    println!();
-
-    None
+    Some(result.to_owned())
 }
 
 pub fn part_two(_input: &str) -> Option<u32> {
